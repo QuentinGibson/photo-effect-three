@@ -620,10 +620,10 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 composer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 const scene = new _three.Scene();
-const camera = new _three.PerspectiveCamera(110, window.innerWidth / window.innerHeight, 0.1, 10000);
+const camera = new _three.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 10000);
 renderer.setClearColor(0x000000);
 const orbit = new (0, _orbitControlsJs.OrbitControls)(camera, renderer.domElement);
-camera.position.set(0, 10, 400);
+camera.position.set(0, 10, 500);
 orbit.update();
 const renderPass = new (0, _renderPass.RenderPass)(scene, camera);
 composer.addPass(renderPass);
@@ -666,7 +666,7 @@ function runAnimation(val) {
         ease: "power4.inOut"
     }, 0);
     tl.to(camera.position, {
-        z: 400,
+        z: 500,
         duration: 0.25,
         ease: "power4.inOut"
     }, 1);
@@ -715,12 +715,16 @@ textures.forEach((val, j)=>{
 });
 const clock = new _three.Clock(true);
 function animate() {
-    const currentTime = clock.getElapsedTime();
+    const time = clock.getElapsedTime();
+    const oscillator = Math.sin(time * 0.1) * 0.5 + 0.5;
     composer.render();
     mouseTarget.lerp(mouseCoords, 0.02);
     groups.forEach((group)=>{
         group.rotation.x = mouseTarget.y * 0.0001;
-        group.rotation.y = -mouseTarget.x * 0.00002;
+        group.rotation.y = -mouseTarget.x * 0.000008;
+        group.children.forEach((target, index)=>{
+            target.position.z = (index + 1) * 90 - oscillator * 50;
+        });
     });
 }
 renderer.setAnimationLoop(animate);
