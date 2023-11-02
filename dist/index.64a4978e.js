@@ -581,33 +581,60 @@ var _orbitControlsJs = require("three/examples/jsm/controls/OrbitControls.js");
 var _gltfloaderJs = require("three/examples/jsm/loaders/GLTFLoader.js");
 var _customEffect = require("./customEffect");
 var _customEffectDefault = parcelHelpers.interopDefault(_customEffect);
-var _onlineEffect = require("./onlineEffect");
-var _onlineEffectDefault = parcelHelpers.interopDefault(_onlineEffect);
-var _onlineEffect2 = require("./onlineEffect2");
-var _onlineEffect2Default = parcelHelpers.interopDefault(_onlineEffect2);
-var _lavaEffect = require("./lavaEffect");
-var _lavaEffectDefault = parcelHelpers.interopDefault(_lavaEffect);
 var _datGui = require("dat.gui");
+var _catwomenPng = require("../assets/catwomen.png");
+var _catwomenPngDefault = parcelHelpers.interopDefault(_catwomenPng);
+var _asianCloseupPng = require("../assets/asian-closeup.png");
+var _asianCloseupPngDefault = parcelHelpers.interopDefault(_asianCloseupPng);
+var _purpleAsianPng = require("../assets/purple-asian.png");
+var _purpleAsianPngDefault = parcelHelpers.interopDefault(_purpleAsianPng);
+var _maskTexturePng = require("../assets/maskTexture.png");
+var _maskTexturePngDefault = parcelHelpers.interopDefault(_maskTexturePng);
 // const newFileUrl = new URL('../assets/Alpaca.gltf', import.meta.url)
+const raw = [
+    (0, _catwomenPngDefault.default),
+    (0, _asianCloseupPngDefault.default),
+    (0, _purpleAsianPngDefault.default)
+];
+const textures = raw.map((image)=>new _three.TextureLoader().load(image));
+const maskTexture = new _three.TextureLoader().load((0, _maskTexturePngDefault.default));
 const renderer = new _three.WebGLRenderer({
     antialias: true
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 const scene = new _three.Scene();
-const camera = new _three.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+const camera = new _three.PerspectiveCamera(110, window.innerWidth / window.innerHeight, 0.1, 1000);
 renderer.setClearColor(0xA3A3A3);
 const orbit = new (0, _orbitControlsJs.OrbitControls)(camera, renderer.domElement);
-camera.position.set(0, 0, 1);
+camera.position.set(0, 0, 470);
 orbit.update();
 // const gui = new dat.GUI();
-const onlineShaderMaterial = new _three.ShaderMaterial((0, _lavaEffectDefault.default));
-const planeGeometry = new _three.PlaneGeometry(2, 1, 300, 300);
-const planeMesh = new _three.Mesh(planeGeometry, onlineShaderMaterial);
-scene.add(planeMesh);
+let groupGeometry = new _three.PlaneGeometry(1920, 1080, 1, 1);
+let group = new _three.Group();
+scene.add(group);
+for(let i = 0; i < 3; i++){
+    let m;
+    let mesh;
+    if (i > 0) {
+        m = new _three.MeshBasicMaterial({
+            map: textures[0],
+            alphaMap: maskTexture,
+            transparent: true
+        });
+        mesh = new _three.Mesh(groupGeometry, m);
+    } else {
+        altM = new _three.MeshBasicMaterial({
+            map: textures[0]
+        });
+        mesh = new _three.Mesh(groupGeometry, altM);
+    }
+    mesh.position.set(0, 0, 0);
+    mesh.position.z += (i + 1) * 40;
+    group.add(mesh);
+}
 function animate() {
     renderer.render(scene, camera);
-    onlineShaderMaterial.uniforms.time.value += 0.01;
 }
 renderer.setAnimationLoop(animate);
 window.addEventListener("resize", function() {
@@ -615,8 +642,9 @@ window.addEventListener("resize", function() {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
+window.addEventListener("mousemove", function() {});
 
-},{"three":"ktPTu","three/examples/jsm/controls/OrbitControls.js":"7mqRv","three/examples/jsm/loaders/GLTFLoader.js":"dVRsF","./customEffect":"cCGgk","./onlineEffect":"ftZHn","./onlineEffect2":"1UbZi","dat.gui":"k3xQk","@parcel/transformer-js/src/esmodule-helpers.js":"1tqZA","./lavaEffect":"dxVYy"}],"ktPTu":[function(require,module,exports) {
+},{"three":"ktPTu","three/examples/jsm/controls/OrbitControls.js":"7mqRv","three/examples/jsm/loaders/GLTFLoader.js":"dVRsF","./customEffect":"cCGgk","dat.gui":"k3xQk","../assets/asian-closeup.png":"d3jSE","../assets/purple-asian.png":"fDpgN","../assets/maskTexture.png":"bxJDB","@parcel/transformer-js/src/esmodule-helpers.js":"1tqZA","../assets/catwomen.png":"4JiTU"}],"ktPTu":[function(require,module,exports) {
 /**
  * @license
  * Copyright 2010-2021 Three.js Authors
@@ -32934,210 +32962,7 @@ uniform float time;
 };
 exports.default = customEffect;
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"1tqZA"}],"ftZHn":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-var _three = require("three");
-const onlineEffect = {
-    uniforms: {
-        time: {
-            value: 0.0
-        },
-        mouse: {
-            value: new _three.Vector2()
-        },
-        resolution: {
-            value: new _three.Vector2(window.innerWidth, window.innerHeight)
-        }
-    },
-    vertexShader: `
-      precision mediump float;
-    
-    varying vec2 vUv;
-    
-    void main() {
-      vUv = uv;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-     `,
-    fragmentShader: `
-  #ifdef GL_ES
-    precision mediump float;
-    #endif
-    
-    uniform float time;
-    uniform vec2 mouse;
-    uniform vec2 resolution;
-    
-    varying vec2 vUv;
-    
-    void main( void ) {
-      vec2 uv = (vUv * 2.0 - 1.0);
-      uv.y *= resolution.y / resolution.x;
-      
-      float dist = length(uv);
-      float angle = atan(uv.y, uv.x);
-      
-      float rippleEffect = sin(8.0 * dist - time * 2.0) * 0.1 / dist;
-      vec3 color = 0.5 + 0.5 * cos(time + uv.xyx + vec3(0, 2.0, 4.0));
-      color += rippleEffect;
-      
-      gl_FragColor = vec4(color, 1.0);
-    }
-  `
-};
-exports.default = onlineEffect;
-
-},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"1tqZA"}],"1UbZi":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-var _three = require("three");
-const onlineEffect = {
-    uniforms: {
-        time: {
-            value: 0.0
-        },
-        mouse: {
-            value: new _three.Vector2()
-        },
-        resolution: {
-            value: new _three.Vector2(window.innerWidth, window.innerHeight)
-        }
-    },
-    vertexShader: `
-      precision mediump float;
-    
-    varying vec2 vUv;
-    
-    void main() {
-      vUv = uv;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-     `,
-    fragmentShader: `
-#ifdef GL_ES
-      precision mediump float;
-    #endif
-
- uniform vec2 resolution;
-    uniform vec2 mouse;
-    uniform float time;
-
-    varying vec2 vUv;
-
-mat2 rotate2D(float r) {
-    return mat2(0.415, tan(0.12*r), -sin(r), cos(r));
-    //return mat2(cos(r), 0.09, -sin(r), cos(r));
-}
-
-float doit(vec2 uv)
-{
-    
-	
-    float t = time*0.66;
-	    vec2 n = vec2(0);
-    vec2 q = vec2(0);
-    vec2 p = uv;
-    float d = 0.0;//dot(p,p);
-    float S = 18.;
-    float a = -0.004;
-    mat2 m = rotate2D(5.);
-
-    for (float j = 0.; j < 5.; j++) {
-        p *= m;
-        n *= m*0.635;
-        q = p * S + t * 4. + sin(t * 1. - d * 8.) * .0018 + 3.*j - .95*n; // wtf???
-        a += dot(cos(q)/S, vec2(.256));
-        n -= sin(q);
-        S *= 1.44;
-    }	
-	return a;
-}
-
-float random (in vec2 _st) {
-    return fract(sin(dot(_st.xy,
-                         vec2(12.9898,78.233)))*
-        43758.5453123);
-}
-
-// Based on Morgan McGuire @morgan3d
-// https://www.shadertoy.com/view/4dS3Wd
-float noise (in vec2 _st) {
-    vec2 i = floor(_st);
-    vec2 f = fract(_st);
-
-    // Four corners in 2D of a tile
-    float a = random(i);
-    float b = random(i + vec2(1.0, 0.0));
-    float c = random(i + vec2(0.0, 1.0));
-    float d = random(i + vec2(1.0, 1.0));
-
-    vec2 u = f * f * (3.0 - 2.0 * f);
-
-    return mix(a, b, u.x) +
-            (c - a)* u.y * (1.0 - u.x) +
-            (d - b) * u.x * u.y;
-}
-
-#define NUM_OCTAVES 5
-
-float fbm ( in vec2 _st) {
-    float v = 0.0;
-    float a = 0.5;
-    vec2 shift = vec2(100.0);
-    // Rotate to reduce axial bias
-    mat2 rot = mat2(cos(0.5), sin(0.5),
-                    -sin(0.5), cos(0.50));
-    for (int i = 0; i < NUM_OCTAVES; ++i) {
-        v += a * noise(_st);
-        _st = rot * _st * 2.0 + shift;
-        a *= 0.515;
-    }
-    return v;
-}
-
-void main () {
-      vec2 st = vUv * resolution.y;
-      float a = doit(st * .5) * 12.0;
-      a = abs(a);
-      st.x *= 0.3;
-
-      vec3 color = vec3(0.0);
-
-      //vec2 st = gl_FragCoord.xy/resolution.xy;
-	
-    //st = st * abs(sin(time*0.1)*3.0);
-    vec2 q = vec2(0.);
-    q.x = fbm( st );
-    q.y = fbm( st + vec2(1.0));
-
-    vec2 r = vec2(0.);
-    r.x = fbm( st + 1.0*q + vec2(1.7,9.2)+ 0.055*time );
-    r.y = fbm( st + 1.0*q + vec2(8.3,2.8)+ 0.0126*time);
-
-    float f = fbm(st+r);
-
-    color = mix(vec3(0.666667,0.101961,0.19608),
-                vec3(0.666667,0.666667,0.48039),
-                clamp((f*f)*4.0,0.0,1.0));
-
-    color = mix(color,
-                vec3(0.164706,0,0),
-                clamp(length(q),0.0,1.0));
-
-    color = mix(color,
-                vec3(1,0.666667,1),
-                clamp(length(r.x),0.0,1.0));
-	
-	color+=a*a*a;
-
-      gl_FragColor = vec4((f * f * f + .6 * f * f + .5 * f) * color * 1.9, 1.);
-}
-  `
-};
-exports.default = onlineEffect;
-
-},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"1tqZA"}],"k3xQk":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"1tqZA"}],"k3xQk":[function(require,module,exports) {
 /**
  * dat-gui JavaScript Controller Library
  * https://github.com/dataarts/dat.gui
@@ -35428,37 +35253,53 @@ var index = {
 };
 exports.default = index;
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"1tqZA"}],"dxVYy":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-var _three = require("three");
-var _lavaFrag = require("../assets/shaders/lava.frag");
-var _lavaFragDefault = parcelHelpers.interopDefault(_lavaFrag);
-var _lavaVert = require("../assets/shaders/lava.vert");
-var _lavaVertDefault = parcelHelpers.interopDefault(_lavaVert);
-const lavaEffect = {
-    uniforms: {
-        time: {
-            value: 0.0
-        },
-        mouse: {
-            value: new _three.Vector2()
-        },
-        resolution: {
-            value: new _three.Vector2(window.innerWidth, window.innerHeight)
-        }
-    },
-    vertexShader: (0, _lavaVertDefault.default),
-    fragmentShader: (0, _lavaFragDefault.default)
-};
-exports.default = lavaEffect;
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"1tqZA"}],"d3jSE":[function(require,module,exports) {
+module.exports = require("7464fd613a4febec").getBundleURL("e6MYJ") + "asian-closeup.c92c6a8a.png" + "?" + Date.now();
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"1tqZA","three":"ktPTu","../assets/shaders/lava.frag":"bgnDR","../assets/shaders/lava.vert":"2sCl2"}],"bgnDR":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\nuniform float time;\nuniform float progress;\nuniform sampler2D texture1;\nuniform vec4 resolution;\n    varying vec2 vUv;\n    varying vec3 vColor;\n\n    void main( void ) {\n      gl_FragColor = vec4(1.0, 1.0 , 0.0, 1.);\n    }";
+},{"7464fd613a4febec":"nT4r1"}],"nT4r1":[function(require,module,exports) {
+"use strict";
+var bundleURL = {};
+function getBundleURLCached(id) {
+    var value = bundleURL[id];
+    if (!value) {
+        value = getBundleURL();
+        bundleURL[id] = value;
+    }
+    return value;
+}
+function getBundleURL() {
+    try {
+        throw new Error();
+    } catch (err) {
+        var matches = ("" + err.stack).match(/(https?|file|ftp|(chrome|moz|safari-web)-extension):\/\/[^)\n]+/g);
+        if (matches) // The first two stack frames will be this function and getBundleURLCached.
+        // Use the 3rd one, which will be a runtime in the original bundle.
+        return getBaseURL(matches[2]);
+    }
+    return "/";
+}
+function getBaseURL(url) {
+    return ("" + url).replace(/^((?:https?|file|ftp|(chrome|moz|safari-web)-extension):\/\/.+)\/[^/]+$/, "$1") + "/";
+}
+// TODO: Replace uses with `new URL(url).origin` when ie11 is no longer supported.
+function getOrigin(url) {
+    var matches = ("" + url).match(/(https?|file|ftp|(chrome|moz|safari-web)-extension):\/\/[^/]+/);
+    if (!matches) throw new Error("Origin not found");
+    return matches[0];
+}
+exports.getBundleURL = getBundleURLCached;
+exports.getBaseURL = getBaseURL;
+exports.getOrigin = getOrigin;
 
-},{}],"2sCl2":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\nuniform float time;\nvarying vec2 vUv;\nvarying vec3 vPosition;\nvarying vec3 vColor;\nvarying vec2 pixels;\nfloat PI = 3.14159265358979323846;\n  \nvoid main() {\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n}";
+},{}],"fDpgN":[function(require,module,exports) {
+module.exports = require("18d171bf619b5450").getBundleURL("e6MYJ") + "purple-asian.a517edce.png" + "?" + Date.now();
 
-},{}]},["jxZVK","goJYj"], "goJYj", "parcelRequire7930")
+},{"18d171bf619b5450":"nT4r1"}],"bxJDB":[function(require,module,exports) {
+module.exports = require("9462db61fe86bb30").getBundleURL("e6MYJ") + "maskTexture.43ba864c.png" + "?" + Date.now();
+
+},{"9462db61fe86bb30":"nT4r1"}],"4JiTU":[function(require,module,exports) {
+module.exports = require("5f536eb98a545791").getBundleURL("e6MYJ") + "catwomen.03be89dd.png" + "?" + Date.now();
+
+},{"5f536eb98a545791":"nT4r1"}]},["jxZVK","goJYj"], "goJYj", "parcelRequire7930")
 
 //# sourceMappingURL=index.64a4978e.js.map
